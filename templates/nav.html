@@ -38,13 +38,13 @@
       .display-none {
         display: none;
       }
-      .profile {
+      #profile {
         font-weight: bold;
         font-size: large;
         text-align: center;
       }
-      </style>
-      {% block style %}{% endblock %}
+    </style>
+    {% block style %}{% endblock %}
 
     <script>
       function goToMain() {
@@ -59,11 +59,34 @@
       function goToEnd() {
         window.location.href = 'http://127.0.0.1:5001/api/board/end';
       }
-      function findHaja() {
-
+      function findHaja() {}
+      function closeHajaModal() {
+        // 기존에 저장된 Input 내용 지우기
       }
-      function createHaja() {
+      function saveHaja() {
+        $.ajax({
+          type: 'post',
+          url: 'http://127.0.0.1:5001/api/board/regi',
+          data: { 
+            when: $('#when').val(), 
+            where: $('#where').val(),
+            what: $('#what').val(), 
+            content: $('#how').val(), 
+            max: $('#howMany').val(), 
+            user:[
+              {
+                user_name: $('#profile').text().slice(0, -1),
+                user_role: 'host',
+                user_check: 'N'
+              }
+            ]
+          },
 
+          success: function (res) {
+
+
+          },
+        });
       }
       function clickMenu() {
         if ($('.menu-toggle').css('display') == 'none') {
@@ -74,7 +97,6 @@
       }
     </script>
     {% block script %}{% endblock %}
-
   </head>
   <body>
     <!-- nav바 -->
@@ -83,11 +105,7 @@
       style="background-color: #152039; color: white"
     >
       <div class="container-fluid">
-        <button
-          class="btn text-light me-2"
-          type="button"
-          onclick="clickMenu()"
-        >
+        <button class="btn text-light me-2" type="button" onclick="clickMenu()">
           <i class="fa-solid fa-bars"></i>
         </button>
         <a class="navbar-brand" href="#" style="color: white">함께 HaJa</a>
@@ -101,12 +119,17 @@
             <button class="btn btn-primary me-2" onclick="findHaja()">
               <i class="fa-solid fa-magnifying-glass"></i>
             </button>
-            <button class="btn btn-primary me-2" onclick="createHaja()">
+            <button
+              type="button"
+              class="btn btn-primary me-2"
+              data-bs-toggle="modal"
+              data-bs-target="#createHajaModal"
+            >
               <i class="fa-solid fa-plus"></i>
             </button>
           </form>
         </div>
-        <div class="profile">남청우님</div>
+        <div id="profile">남청우님</div>
       </div>
     </nav>
 
@@ -142,6 +165,122 @@
       {% block content %}{% endblock %}
     </div>
 
+    <div
+      class="modal fade"
+      id="createHajaModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="createHajaModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="createHajaModalLabel">
+              HaJa 생성하기
+            </h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              onclick="closeHajaModal()"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="box regi-form">
+              <img
+                src="/Users/ja/Desktop/Jungle/Week0/Haja/HaJa_logo_short.png"
+                alt=""
+              />
+              <form>
+                <div class="content">
+                  <div class="container d-flex flex-column align-items-center">
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="input-haja1"
+                        >언제&nbsp;&nbsp;&nbsp;</span
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="when"
+                        aria-label="when"
+                        aria-describedby="input-haja1"
+                      />
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="input-haja2"
+                        >어디서</span
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="where"
+                        aria-label="where"
+                        aria-describedby="input-haja2"
+                      />
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="input-haja3"
+                        >무엇을</span
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="what"
+                        aria-label="what"
+                        aria-describedby="input-haja3"
+                      />
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="input-haja4"
+                        >어떻게</span
+                      >
+                      <textarea
+                        class="form-control"
+                        id="how"
+                        aria-label="how"
+                        aria-describedby="input-haja4"
+                        maxlength="100"
+                      ></textarea>
+                    </div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="input-haja5"
+                        >몇명이</span
+                      >
+                      <select
+                        class="form-select"
+                        id="howMany"
+                        aria-label="howMany"
+                        aria-describedby="input-haja5"
+                      >
+                        <option selected value="2">2명</option>
+                        <option value="3">3명</option>
+                        <option value="4">4명</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+              onclick="closeHajaModal()"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveHaja()">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- bootstrap -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
