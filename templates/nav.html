@@ -47,6 +47,24 @@
       {% block style %}{% endblock %}
 
     <script>
+      function goToMain() {
+        window.location.href = 'http://127.0.0.1:5001/api/board/main';
+      }
+      function goToMy() {
+        window.location.href = 'http://127.0.0.1:5001/api/board/my';
+      }
+      function goToOngo() {
+        window.location.href = 'http://127.0.0.1:5001/api/board/ongo';
+      }
+      function goToEnd() {
+        window.location.href = 'http://127.0.0.1:5001/api/board/end';
+      }
+      function findHaja() {
+
+      }
+      function createHaja() {
+
+      }
       function clickMenu() {
         if ($('.menu-toggle').css('display') == 'none') {
           $('.menu-toggle').show();
@@ -80,10 +98,10 @@
               class="me-2 w-50"
               placeholder="모임 제목을 입력해주세요."
             />
-            <button class="btn btn-primary me-2" onclick="find()">
+            <button class="btn btn-primary me-2" onclick="findHaja()">
               <i class="fa-solid fa-magnifying-glass"></i>
             </button>
-            <button class="btn btn-primary me-2" onclick="create()">
+            <button class="btn btn-primary me-2" onclick="createHaja()">
               <i class="fa-solid fa-plus"></i>
             </button>
           </form>
@@ -99,23 +117,23 @@
         class="d-flex flex-column align-items-start p-2"
         style="height: 100vh"
       >
-        <button class="w-100 btn btn-primary my-2">
+        <button class="w-100 btn btn-primary my-2" onclick="logout()">
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
           <span class="menu-toggle display-none">로그아웃</span>
         </button>
-        <button class="w-100 btn btn-primary my-2">
+        <button class="w-100 btn btn-primary my-2" onclick="goToMain()">
           <i class="fa-solid fa-house"></i>
           <span class="menu-toggle display-none">모집중인 HaJa</span>
         </button>
-        <button class="w-100 btn btn-primary my-2">
+        <button class="w-100 btn btn-primary my-2" onclick="goToMy()">
           <i class="fa-solid fa-screwdriver"></i>
           <span class="menu-toggle display-none">내가 만든 HaJa</span>
         </button>
-        <button class="w-100 btn btn-primary my-2">
+        <button class="w-100 btn btn-primary my-2" onclick="goToOngo()">
           <i class="fa-solid fa-spinner"></i>
           <span class="menu-toggle display-none">진행중인 HaJa</span>
         </button>
-        <button class="w-100 btn btn-primary my-2">
+        <button class="w-100 btn btn-primary my-2" onclick="goToEnd()">
           <i class="fa-solid fa-circle-check"></i>
           <span class="menu-toggle display-none">완료된 HaJa</span>
         </button>
