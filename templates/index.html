@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Rubik:400,700'><link rel="stylesheet" href="static/css/style.css">
+
+  <!-- font -->
+  <script>
+    (function(d) {
+      var config = {
+        kitId: 'pkt5dwa',
+        scriptTimeout: 3000,
+        async: true
+      },
+      h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+    })(document);
+  </script>
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<div class="box login-form">
+  <img src="/static/images/HaJa_title.png" alt="">
+  <div class="header">
+      <h1 id="sub-title">같이 할래요?</h1>
+  </div>
+  <form>
+<!--    <h1>Login</h1>-->
+<!--    input required 나중에 추가-->
+    <div class="content">
+      <div class="input-field">
+        <input type="email" placeholder="Email" autocomplete="nope">
+      </div>
+      <div class="input-field">
+        <input type="password" placeholder="Password" autocomplete="new-password">
+      </div>
+
+    </div>
+    <div class="action">
+      <button>가입하기</button>
+      <button>로그인</button>
+    </div>
+  </form>
+</div>
+
+</body>
+</html>
