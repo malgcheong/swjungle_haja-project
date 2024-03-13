@@ -16,7 +16,7 @@
     boardId = $(me).closest('.card-wrap').attr('class').split(/\s+/)[5];
     $.ajax({
           type: 'post',
-          url: 'http://127.0.0.1:5001/api/board/main/join',
+          url: '/api/board/main/join',
           data: {
             user_name: $('#profile').text().slice(0, -1),
             user_role: 'guest',
@@ -25,7 +25,7 @@
           },
 
           success: function (res) {
-            alert("참가 ")
+            alert("참가")
           },
         });
   }
