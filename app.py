@@ -1,18 +1,12 @@
 from bson import ObjectId
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pymongo import MongoClient
-import datetime
-
+import datetime, certifi
+import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import jwt_required, JWTManager, create_access_token
+SECRET_KEY = 'your_secret_key123123'
 
 app = Flask(__name__)
-app.config['JWT_TOKEN_LOCATION'] = ['headers']
-app.config['JWT_HEADER_TYPE'] = 'Bearer'
-app.config['JWT_HEADER_NAME'] = 'Authorization'
-app.config['JWT_SECRET_KEY'] = 'your-jwt-secret-key'
-SECRET_KEY = 'your_secret_key123123'
-jwt = JWTManager(app)
 
 # MongoDB 연결
 ca = certifi.where()
@@ -42,10 +36,12 @@ def login():
 
     if user and check_password_hash(user['password'], password):  # 비밀번호 해싱 체크
 
-        # JWT 토큰 생성 및 사용자 정보 포함
-        # token = jwt.encode({'user': user['user_name'], 'email': user['email'],
-        #                     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, SECRET_KEY)
-        token = create_access_token(identity=user['email'], expires_delta=datetime.timedelta(minutes=30))
+        payload = {
+         'user': user['user_name'],
+         'email': user['email'],
+         'exp': datetime.datetime.utcnow() +  datetime.timedelta(minutes=30)}
+        # 토큰을 발급한다.
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
         # 토큰을 응답으로 반환
         return jsonify({'token': token, 'user': user['user_name'], 'email': user['email']}), 200
 
@@ -78,24 +74,48 @@ def sign_up():
 
 # 메인 haja 페이지 이동
 @app.route('/api/board/main', methods=['GET'])
-@jwt_required()
 def board_main():
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
+# Extract JWT token from the request cookie
+    jwt_token = request.cookies.get('token')
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
 
-    # 진행상태는 아직 안정해졌고, 모집상태가 on인것만 반환
-    filtered_results = []
-    for item in all_results:
-        if item.get('status') == '' and item.get('meet') == 'on':
-            item['_id'] = str(item['_id'])
-            filtered_results.append(item)
+    try:
+        # Validate the JWT token
+        # For simplicity, let's assume a secret key is used for signing the token
+        # Replace 'your_secret_key' with your actual secret key
+        decoded_token = jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
 
-    return render_template('main_haja.html', result=filtered_results)
+        # Extract user information from the decoded token
+        user_email = decoded_token.get('email')
+        user_id = decoded_token.get('user_id')
+
+        # Continue with the route logic
+        all_results = list(db.board.find({}))
+        filtered_results = []
+        for item in all_results:
+            if item.get('status') == '' and item.get('meet') == 'on':
+                item['_id'] = str(item['_id'])
+                filtered_results.append(item)
+
+        return render_template('main_haja.html', result=filtered_results)
+
+    except jwt.ExpiredSignatureError:
+        # Handle expired token
+        return jsonify({'error': 'JWT token has expired'}), 401
+
+    except jwt.InvalidTokenError:
+        # Handle invalid token (e.g., tampered token)
+        return jsonify({'error': 'Invalid JWT token'}), 401
+
+    except Exception as e:
+        # Handle other exceptions
+        return jsonify({'error': str(e)}), 401
 
 
 # 내가 만든 haja 페이지 이동
 @app.route('/api/board/my', methods=['GET'])
-@jwt_required()
 def board_my():
     user_name = request.form.get('user_name')
     # 모든 게시글 가져오기
@@ -114,7 +134,6 @@ def board_my():
 
 # 진행중인 haja 페이지 이동
 @app.route('/api/board/ongo', methods=['GET'])
-@jwt_required()
 def board_ongo():
     user_name = request.form.get('user_name')
     # 모든 게시글 가져오기
@@ -133,7 +152,6 @@ def board_ongo():
 
 # 완료된 haja 페이지 이동
 @app.route('/api/board/end', methods=['GET'])
-@jwt_required()
 def board_end():
     user_name = request.form.get('user_name')
     # 모든 게시글 가져오기
@@ -152,7 +170,6 @@ def board_end():
 
 # 게시글 검색
 @app.route('/api/board/search', methods=['GET'])
-@jwt_required()
 def search_board():
     # 시간, 장소, 내용에 해당 텍스트가 포함되는 모든 문서 검색
     search = request.args.get('search')
@@ -186,7 +203,6 @@ def search_board():
 
 # 메인 haja 페이지에서 참가 버튼 클릭시
 @app.route('/api/board/main/join', methods=['POST'])
-# @jwt_required()
 def board_main_join():
     # 참가 버튼 클릭시 update 참여 인원+1, 참가자 추가
 
@@ -217,7 +233,6 @@ def board_main_join():
 
 # haja 등록
 @app.route('/api/board/regi', methods=['POST'])
-@jwt_required()
 def regi_board():
     # 사용자 정보 가져오기
 
@@ -264,7 +279,6 @@ def regi_board():
 
 # 내가 만든 haja 마감
 @app.route('/api/board/my/close', methods=['POST'])
-@jwt_required()
 def close_board():
     board_id = request.form.get('board_id')
     db.board.update_one({'_id': ObjectId(board_id)}, {'$set': {'meet': 'off', 'status': 'ongo'}})
@@ -273,7 +287,6 @@ def close_board():
 
 # 내가 만든 haja 수정
 @app.route('/api/board/my/update', methods=['POST'])
-@jwt_required()
 def update_board():
     # 클라이언트로부터 폼 데이터 추출
     when = request.form.get('when')
@@ -300,7 +313,6 @@ def update_board():
 
 # 내가 만든 haja 삭제
 @app.route('/api/board/my/delete', methods=['POST'])
-@jwt_required()
 def delete_board():
     board_id = request.form.get('board_id')
     result = db.board.delete_one({'_id': ObjectId(board_id)})
@@ -313,7 +325,6 @@ def delete_board():
 
 # 진행중인 haja 완료
 @app.route('/api/board/ongo/check', methods=['POST'])
-@jwt_required()
 def board_check():
     # 완료 버튼 클릭시 update 참가자 체크 & 모든 참가자가 체크 상태일 시 => 게시글의 상태를 완료 상태로 변경
 
@@ -353,7 +364,6 @@ def board_check():
 
 # 완료된 haja 소감쓰기
 @app.route('/api/board/end/comment', methods=['POST'])
-@jwt_required()
 def board_comment():
     # 소감 쓰기 버튼 클릭 시 update comment 칼럼에 댓글 추가 및 사용자 이름 추가
 
@@ -388,4 +398,4 @@ def board_comment():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0', port=5000, debug=True)
+    app.run('0.0.0.0', port=5001, debug=True)

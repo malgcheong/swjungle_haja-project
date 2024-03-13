@@ -106,6 +106,7 @@
           // Get the username and password from the form
           var email = $('#email').val();
           var password = $('#password').val();
+          debugger;
 
           // Send the username and password to the server using AJAX
           $.ajax({
@@ -115,11 +116,19 @@
             data: JSON.stringify({ email: email, password: password }),
             success: function (response) {
               // Handle successful login (e.g., redirect to board)
+              debugger;
+
+              sessionStorage.setItem('token', response.token);
+              sessionStorage.setItem('email', response.email);
+              sessionStorage.setItem('user', response.user);
+              document.cookie = `token=${response.token}; path=/`;
               window.location.href = '/api/board/main';
+
+              debugger;
             },
             error: function (xhr, status, error) {
               // Handle login error (e.g., display error message)
-              console.error('Login error:', error);
+              // console.log('Login error:', error);
               alert('Login failed. Please try again.');
             },
           });
@@ -161,7 +170,7 @@
           </div>
         </div>
         <div class="action">
-          <button type="submit" onclick="logIn()">로그인</button>
+          <button type="submit">로그인</button>
           <a href="/api/sign_up"> 회원가입 </a>
         </div>
       </form>
