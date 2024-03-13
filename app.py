@@ -3,6 +3,8 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pymongo import MongoClient
 import datetime
 import jwt
+import certifi
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import get_jwt, jwt_required
 
@@ -11,8 +13,9 @@ app = Flask(__name__)
 SECRET_KEY = 'your_secret_key123123'
 
 # MongoDB 연결
-client = MongoClient('mongodb+srv://sparta:jungle@cluster0.5ue2fmm.mongodb.net/?retryWrites=true&w=majority')
-db = client.haja  # 여기에 본인의 MongoDB 데이터베이스 이름을 넣으세요
+ca = certifi.where()
+client = MongoClient('mongodb+srv://skacjddn:1234@cluster0.do59mm5.mongodb.net/?retryWrites=true&w=majority', tlsCAFile = ca)
+db = client.db_jungle# 여기에 본인의 MongoDB 데이터베이스 이름을 넣으세요
 
 
 # 시작 페이지
@@ -31,9 +34,11 @@ def board_main():
 
     # 진행상태는 아직 안정해졌고, 모집상태가 on인것만 반환
     filtered_results = []
-    for item in all_results:
+    for i, item in enumerate(all_results):
         if item.get('status') == '' and item.get('meet') == 'on':
             filtered_results.append(item)
+            item['_id'] = str(item['_id'])
+            item['num'] = i+1
 
     return render_template('main_haja.html', result=filtered_results)
 
@@ -223,7 +228,7 @@ def regi_board():
     result = db.board.insert_one(data)
 
     if result.inserted_id:
-        return jsonify({'message': "register board successfully!", 'board_id': result.inserted_id}), 200
+        return jsonify({'message': "register board successfully!", 'board_id': str(result.inserted_id)}), 200
     else:
         return jsonify({'message': "register board fail!"}), 500
 
@@ -343,4 +348,4 @@ def board_comment():
 
 
 if __name__ == '__main__':
-    app.run()
+   app.run('0.0.0.0',port=5001,debug=True)

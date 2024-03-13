@@ -10,9 +10,7 @@
     margin-top: 30px;
   }
 </style>
-{% endblock %}
-
-{% block script %}
+{% endblock %} {% block script %}
 <script>
   function clickHowToggle(me) {
     if ($(me.parentElement).find('.fa-chevron-down').css('display') == 'none') {
@@ -25,24 +23,22 @@
       $(me.parentElement).find('.fa-chevron-up').show();
     }
   }
-  function clickCheck() {
-    // event.preventDefault();
-  }
 </script>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="card-list d-flex flex-column align-items-center">
+  {% for item in result %}
   <div
-    class="card-wrap border border-0 rounded-4 p-4"
+    class="card-wrap border border-0 rounded-4 p-4 {{ item._id }}"
     style="background-color: #f6f6e9"
   >
     <div class="row">
       <p class="col-8 border border-2 border-dark rounded-2">
-        3/21에 전민동에서 밥먹자!
+        {{ item.when }}에 {{ item.where }}에서 {{ item.what }}하자!
       </p>
       <div class="col-4">
-        <p class="badge bg-primary lh-1">1/4</p>
+        <p class="badge bg-primary lh-1">
+          {{ item.user|length }} / {{ item.max }}
+        </p>
         <button class="btn btn-sm btn-primary lh-1" style="height: 25px">
           참가
         </button>
@@ -51,9 +47,9 @@
           style="height: 25px"
           type="button"
           data-bs-toggle="collapse"
-          data-bs-target="#howDiv"
+          data-bs-target="#content{{item.num}}"
           aria-expanded="false"
-          aria-controls="#howDiv"
+          aria-controls="#content{{item.num}}"
           onclick="clickHowToggle(this)"
         >
           <i class="fa-solid fa-chevron-down"></i>
@@ -61,31 +57,24 @@
         </button>
       </div>
     </div>
-    <div class="row collapse" id="howDiv">
-      <div class="col-8 border border-2 border-dark rounded-2"></div>
+    <div class="row collapse" id="content{{item.num}}">
+      <div class="col-8 border border-2 border-dark rounded-2">
+        {{ item.content }}
+      </div>
       <div class="col-4">
+        {% for user in item.user %}
         <div class="d-form-check">
-          <label class="form-check-label" for="flexCheck1"> 박영민 </label>
-          <input
-            class="form-check-input"
-            type="checkbox"
-            value=""
-            onclick="clickCheck(this)"
-            id="flexCheck1"
-          />
+          <label class="form-check-label" for="{{ user.user_name }}">
+            {{ user.user_name }}
+          </label>
+          <input class="form-check-input" id="{{ user.user_name }}"
+          type="checkbox" {% if user.user_check == 'Y' %} checked {% endif %}
+          disabled onclick="return false;" />
         </div>
-        <div class="d-form-check">
-          <label class="form-check-label" for="flexCheck2"> 박지아 </label>
-          <input
-            class="form-check-input"
-            type="checkbox"
-            value=""
-            onclick="clickCheck(this)"
-            id="flexCheck2"
-          />
-        </div>
+        {% endfor %}
       </div>
     </div>
   </div>
+  {% endfor %}
 </div>
 {% endblock %}

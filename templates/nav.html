@@ -67,25 +67,18 @@
         $.ajax({
           type: 'post',
           url: 'http://127.0.0.1:5001/api/board/regi',
-          data: { 
-            when: $('#when').val(), 
+          data: {
+            user_name: $('#profile').text().slice(0, -1),
+            user_role: 'host',
+            user_check: 'N',
+            when: $('#when').val(),
             where: $('#where').val(),
-            what: $('#what').val(), 
-            content: $('#how').val(), 
-            max: $('#howMany').val(), 
-            user:[
-              {
-                user_name: $('#profile').text().slice(0, -1),
-                user_role: 'host',
-                user_check: 'N'
-              }
-            ]
+            what: $('#what').val(),
+            content: $('#how').val(),
+            max: $('#howMany').val()
           },
 
-          success: function (res) {
-
-
-          },
+          success: function (res) {},
         });
       }
       function clickMenu() {
