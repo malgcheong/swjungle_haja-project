@@ -16,7 +16,7 @@
     boardId = $(me).closest('.card-wrap').attr('class').split(/\s+/)[5];
     $.ajax({
           type: 'post',
-          url: '/api/board/main/join',
+          url: 'http://127.0.0.1:5001/api/board/main/join',
           data: {
             user_name: $('#profile').text().slice(0, -1),
             user_role: 'guest',
@@ -25,7 +25,7 @@
           },
 
           success: function (res) {
-            alert("참가")
+            alert("참가 ")
           },
         });
   }
@@ -69,9 +69,9 @@
           style="height: 25px"
           type="button"
           data-bs-toggle="collapse"
-          data-bs-target="#content{{item.num}}"
+          data-bs-target="#content{{ item._id }}"
           aria-expanded="false"
-          aria-controls="#content{{item.num}}"
+          aria-controls="#content{{ item._id }}"
           onclick="clickHowToggle(this)"
         >
           <i class="fa-solid fa-chevron-down"></i>
@@ -79,7 +79,7 @@
         </button>
       </div>
     </div>
-    <div class="row collapse content" id="content{{item.num}}">
+    <div class="row collapse content" id="content{{ item._id }}">
       <div class="col-8 border border-2 border-dark rounded-2">
         {{ item.content }}
       </div>

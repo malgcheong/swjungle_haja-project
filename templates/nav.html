@@ -66,45 +66,20 @@
       });
 
       function goToMain() {
-        window.location.href = '/api/board/main';
+        window.location.href = 'http://127.0.0.1:5001/api/board/main';
       }
       function goToMy() {
-        window.location.href = '/api/board/my';
+        window.location.href = 'http://127.0.0.1:5001/api/board/my';
       }
       function goToOngo() {
-        window.location.href = '/api/board/ongo';
+        window.location.href = 'http://127.0.0.1:5001/api/board/ongo';
       }
       function goToEnd() {
-        window.location.href = '/api/board/end';
+        window.location.href = 'http://127.0.0.1:5001/api/board/end';
       }
-
-      function findHaja() {
-
-          debugger;
-          // 키워드 가져오기
-              var search = $('#search-word').val();
-
-              if (search.length > 0) {
-                  $.ajax({
-                      type: 'get',
-                      url: '/api/board/search',
-                      data: {
-                          search: search
-                      },
-                      success: function (res) {
-                          alert(res.message);
-                      },
-                      error: function (xhr, status, error) {
-                          // Handle error if needed
-                          console.error(xhr, status, error);
-                      }
-                  });
-              } else {
-                  alert('검색어를 입력하세요!');
-              }
-      }
+      function findHaja() {}
       function closeHajaModal() {
-         $('.input-group input[type="text"]').val('');
+        // 기존에 저장된 Input 내용 지우기
       }
       function saveHaja() {
         $('.form-control').each(function () {
@@ -117,7 +92,7 @@
         });
 
         var isValid = true;
-        $('input').each(function () {
+        $('.form-control').each(function () {
           if ($(this).hasClass('is-invalid')) {
             isValid = false; // 하나라도 빨간색 테두리가 있는 경우 유효하지 않음
             $(this).focus(); // 해당 입력필드로 포커싱
@@ -130,113 +105,108 @@
         var what = $('#what').val().trim();
         var how = $('#how').val().trim();
 
-        $.ajax({
-          type: 'post',
-          url: '/api/board/regi',
-          data: {
-            user_name: $('#profile').text().slice(0, -1),
-            user_role: 'host',
-            user_check: 'N',
-            when: when,
-            where: where,
-            what: what,
-            content: how,
-            max: $('#howMany').val(),
-          },
+        if (isValid) {
+          $.ajax({
+            type: 'post',
+            url: 'http://127.0.0.1:5001/api/board/regi',
+            data: {
+              user_name: $('#profile').text().slice(0, -1),
+              user_role: 'host',
+              user_check: 'N',
+              when: when,
+              where: where,
+              what: what,
+              content: how,
+              max: $('#howMany').val(),
+            },
 
-          success: function (res) {
-            const saveToast = $('#saveToast');
-            const toast = new bootstrap.Toast(saveToast[0]);
-            $('#createHajaModal').modal('toggle');
-            toast.show();
-            const board = res.board;
-            const user = board.user;
-            let num = $('.content').length;
+            success: function (res) {
+              const saveToast = $('#saveToast');
+              const toast = new bootstrap.Toast(saveToast[0]);
+              $('#createHajaModal').modal('toggle');
+              toast.show();
+              const board = res.board;
+              const user = board.user;
 
-            $('.content')[$('.content').length - 1];
-            board;
-            $('.card-list').append(`
-            <div
-                class="card-wrap border border-0 rounded-4 p-4 ${board['_id']}"
-                style="background-color: #f6f6e9"
-              >
-                <div class="row">
-                  <p class="col-8 border border-2 border-dark rounded-2">
-                    ${board['when']}에 ${board['where']}에서 ${board['what']}하자!
-                  </p>
-                  <div class="col-4">
-                    <p class="badge bg-primary lh-1">
-                      ${user.length} / ${board['max']}
+              $('.card-list').prepend(`
+              <div
+                  class="card-wrap border border-0 rounded-4 p-4 ${
+                    board['_id']
+                  }"
+                  style="background-color: #f6f6e9"
+                >
+                  <div class="row">
+                    <p class="col-8 border border-2 border-dark rounded-2">
+                      ${board['when']}에 ${board['where']}에서 ${
+                board['what']
+              }하자!
                     </p>
-                    <button
-                      class="btn btn-sm btn-primary lh-1"
-                      style="height: 25px"
-                      onclick="enterHaja(this)"
-                    >
-                      참가
-                    </button>
-                    <button
-                      class="btn btn-sm btn-primary lh-1"
-                      style="height: 25px"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#content${num}"
-                      aria-expanded="false"
-                      aria-controls="#content${num}"
-                      onclick="clickHowToggle(this)"
-                    >
-                      <i class="fa-solid fa-chevron-down"></i>
-                      <i class="fa-solid fa-chevron-up display-none"></i>
-                    </button>
+                    <div class="col-4">
+                      <p class="badge bg-primary lh-1">
+                        ${user.length} / ${board['max']}
+                      </p>
+                      <button
+                        class="btn btn-sm btn-primary lh-1"
+                        style="height: 25px"
+                        onclick="enterHaja(this)"
+                      >
+                        참가
+                      </button>
+                      <button
+                        class="btn btn-sm btn-primary lh-1"
+                        style="height: 25px"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#content${board['_id']}"
+                        aria-expanded="false"
+                        aria-controls="#content${board['_id']}"
+                        onclick="clickHowToggle(this)"
+                      >
+                        <i class="fa-solid fa-chevron-down"></i>
+                        <i class="fa-solid fa-chevron-up display-none"></i>
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div class="row collapse content" id="content${num}">
-                  <div class="col-8 border border-2 border-dark rounded-2">
-                    ${board['content']}
+                  <div class="row collapse content" id="content${board['_id']}">
+                    <div class="col-8 border border-2 border-dark rounded-2">
+                      ${board['content']}
+                    </div>
+                    <div class="col-4">
+                      <div class="d-form-check">
+                        <label
+                          class="position-relative form-check-label"
+                          for="${user[0].user_name}"
+                        >
+                          ${user[0].user_name} 
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge"
+                          >
+                            <i
+                              class="fa-solid fa-crown fa-rotate-by fa-sm"
+                              style="color: #ffd43b; --fa-rotate-angle: 30deg"
+                            ></i>
+                            <span class="visually-hidden">host</span>
+                          </span>
+                        </label>
+                        <input class="form-check-input" id="${
+                          user[0].user_name
+                        }"
+                        type="checkbox" 
+                        ${user[0]['user_check'] == 'Y' ? 'checked' : ''}
+                        disabled onclick="return false;" />
+                      </div>
+                    </div>
                   </div>
-                  <div class="col-4">
-
-            `);
-
-            for (let i = 0; i < user.length; i++) {
-              $('.card-list').append(`
-                <div class="d-form-check">
-                  <label
-                    class="position-relative form-check-label"
-                    for="${user[i].user_name}"
-                  >
-                    ${user[i].user_name} 
-                    
-                    ${
-                      user[i]['user_role'] == 'host'
-                        ? `                    <span
-                      class="position-absolute top-0 start-100 translate-middle badge"
-                    >
-                      <i
-                        class="fa-solid fa-crown fa-rotate-by fa-sm"
-                        style="color: #ffd43b; --fa-rotate-angle: 30deg"
-                      ></i>
-                      <span class="visually-hidden">host</span>
-                    </span>`
-                        : ''
-                    }
-
-                  </label>
-                  <input class="form-check-input" id="${user[i].user_name}"
-                  type="checkbox" 
-                  ${user[i]['user_check'] == 'Y' ? 'checked' : ''}
-                  disabled onclick="return false;" />
                 </div>
               `);
-            }
 
-            $('.card-list').append(`
-                  </div>
-                </div>
-              </div>
-              `);
-          },
-        });
+              $('#when').val('');
+              $('#where').val('');
+              $('#what').val('');
+              $('#how').val('');
+            },
+          });
+        }
       }
       function clickMenu() {
         if ($('.menu-toggle').css('display') == 'none') {
@@ -244,17 +214,6 @@
         } else if ($('.menu-toggle').css('display') == 'inline') {
           $('.menu-toggle').hide();
         }
-      }
-
-      function logout(){
-        // Remove JWT from local storage
-        localStorage.removeItem('jwtToken');
-        // Remove JWT from session storage
-        sessionStorage.removeItem('jwtToken');
-        // Remove JWT from cookies
-        document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        alert("로그아웃 되었습니다");
-        window.location.href = '/';
       }
     </script>
     {% block script %}{% endblock %}
@@ -271,9 +230,8 @@
         </button>
         <a class="navbar-brand" href="#" style="color: white">함께 HaJa</a>
         <div class="container">
-          <form class="d-flex justify-content-center">
+          <div class="d-flex justify-content-center">
             <input
-              id="search-word"
               type="text"
               class="me-2 w-50"
               placeholder="모임 제목을 입력해주세요."
@@ -289,7 +247,7 @@
             >
               <i class="fa-solid fa-plus"></i>
             </button>
-          </form>
+          </div>
         </div>
         <div id="profile">남청우님</div>
       </div>
@@ -356,7 +314,7 @@
                 src="/Users/ja/Desktop/Jungle/Week0/Haja/HaJa_logo_short.png"
                 alt=""
               />
-              <form>
+              <div>
                 <div class="content">
                   <div class="container d-flex flex-column align-items-center">
                     <div class="input-group mb-3">
@@ -426,7 +384,7 @@
                     </div>
                   </div>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
