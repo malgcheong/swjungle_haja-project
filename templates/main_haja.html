@@ -12,6 +12,24 @@
 </style>
 {% endblock %} {% block script %}
 <script>
+  function enterHaja(me) {
+    boardId = $(me).closest('.card-wrap').attr('class').split(/\s+/)[5];
+    $.ajax({
+          type: 'post',
+          url: 'http://127.0.0.1:5001/api/board/main/join',
+          data: {
+            user_name: $('#profile').text().slice(0, -1),
+            user_role: 'guest',
+            user_check: 'N',
+            board_id: boardId
+          },
+
+          success: function (res) {
+            alert("참가 ")
+          },
+        });
+  }
+
   function clickHowToggle(me) {
     if ($(me.parentElement).find('.fa-chevron-down').css('display') == 'none') {
       $(me.parentElement).find('.fa-chevron-down').show();
@@ -39,7 +57,11 @@
         <p class="badge bg-primary lh-1">
           {{ item.user|length }} / {{ item.max }}
         </p>
-        <button class="btn btn-sm btn-primary lh-1" style="height: 25px">
+        <button
+          class="btn btn-sm btn-primary lh-1"
+          style="height: 25px"
+          onclick="enterHaja(this)"
+        >
           참가
         </button>
         <button
@@ -57,7 +79,7 @@
         </button>
       </div>
     </div>
-    <div class="row collapse" id="content{{item.num}}">
+    <div class="row collapse content" id="content{{item.num}}">
       <div class="col-8 border border-2 border-dark rounded-2">
         {{ item.content }}
       </div>
@@ -70,7 +92,7 @@
           >
             {{ user.user_name }} {% if user.user_role == 'host' %}
             <span
-              class="position-absolute top-0 start-100 translate-middle badge"
+              class="top-0 start-100 translate-middle badge"
             >
               <i
                 class="fa-solid fa-crown fa-rotate-by fa-sm"
