@@ -43,10 +43,28 @@
         font-size: large;
         text-align: center;
       }
+      .is-invalid {
+        border: solid red;
+      }
     </style>
     {% block style %}{% endblock %}
 
     <script>
+      $(document).ready(function () {
+        // 입력 필드에서 포커스가 벗어날 때 이벤트 처리
+        $('.form-control').each(function () {
+          $(this).blur(function () {
+            // 입력 필드의 값 확인 및 스타일 변경
+            var value = $(this).val().trim();
+            if (value === '') {
+              $(this).addClass('is-invalid'); // 값이 없는 경우 빨간색 테두리 추가
+            } else {
+              $(this).removeClass('is-invalid'); // 값이 있는 경우 빨간색 테두리 제거
+            }
+          });
+        });
+      });
+
       function goToMain() {
         window.location.href = 'http://127.0.0.1:5001/api/board/main';
       }
@@ -64,6 +82,29 @@
         // 기존에 저장된 Input 내용 지우기
       }
       function saveHaja() {
+        $('.form-control').each(function () {
+          var value = $(this).val().trim();
+          if (value === '') {
+            $(this).addClass('is-invalid'); // 값이 없는 경우 빨간색 테두리 추가
+          } else {
+            $(this).removeClass('is-invalid'); // 값이 있는 경우 빨간색 테두리 제거
+          }
+        });
+
+        var isValid = true;
+        $('input').each(function () {
+          if ($(this).hasClass('is-invalid')) {
+            isValid = false; // 하나라도 빨간색 테두리가 있는 경우 유효하지 않음
+            $(this).focus(); // 해당 입력필드로 포커싱
+            return false;
+          }
+        });
+
+        var when = $('#when').val().trim();
+        var where = $('#where').val().trim();
+        var what = $('#what').val().trim();
+        var how = $('#how').val().trim();
+
         $.ajax({
           type: 'post',
           url: 'http://127.0.0.1:5001/api/board/regi',
@@ -71,14 +112,105 @@
             user_name: $('#profile').text().slice(0, -1),
             user_role: 'host',
             user_check: 'N',
-            when: $('#when').val(),
-            where: $('#where').val(),
-            what: $('#what').val(),
-            content: $('#how').val(),
-            max: $('#howMany').val()
+            when: when,
+            where: where,
+            what: what,
+            content: how,
+            max: $('#howMany').val(),
           },
 
-          success: function (res) {},
+          success: function (res) {
+            const saveToast = $('#saveToast');
+            const toast = new bootstrap.Toast(saveToast[0]);
+            $('#createHajaModal').modal('toggle');
+            toast.show();
+            const board = res.board;
+            const user = board.user;
+            let num = $('.content').length;
+
+            $('.content')[$('.content').length - 1];
+            board;
+            $('.card-list').append(`
+            <div
+                class="card-wrap border border-0 rounded-4 p-4 ${board['_id']}"
+                style="background-color: #f6f6e9"
+              >
+                <div class="row">
+                  <p class="col-8 border border-2 border-dark rounded-2">
+                    ${board['when']}에 ${board['where']}에서 ${board['what']}하자!
+                  </p>
+                  <div class="col-4">
+                    <p class="badge bg-primary lh-1">
+                      ${user.length} / ${board['max']}
+                    </p>
+                    <button
+                      class="btn btn-sm btn-primary lh-1"
+                      style="height: 25px"
+                      onclick="enterHaja(this)"
+                    >
+                      참가
+                    </button>
+                    <button
+                      class="btn btn-sm btn-primary lh-1"
+                      style="height: 25px"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#content${num}"
+                      aria-expanded="false"
+                      aria-controls="#content${num}"
+                      onclick="clickHowToggle(this)"
+                    >
+                      <i class="fa-solid fa-chevron-down"></i>
+                      <i class="fa-solid fa-chevron-up display-none"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="row collapse content" id="content${num}">
+                  <div class="col-8 border border-2 border-dark rounded-2">
+                    ${board['content']}
+                  </div>
+                  <div class="col-4">
+
+            `);
+
+            for (let i = 0; i < user.length; i++) {
+              $('.card-list').append(`
+                <div class="d-form-check">
+                  <label
+                    class="position-relative form-check-label"
+                    for="${user[i].user_name}"
+                  >
+                    ${user[i].user_name} 
+                    
+                    ${
+                      user[i]['user_role'] == 'host'
+                        ? `                    <span
+                      class="position-absolute top-0 start-100 translate-middle badge"
+                    >
+                      <i
+                        class="fa-solid fa-crown fa-rotate-by fa-sm"
+                        style="color: #ffd43b; --fa-rotate-angle: 30deg"
+                      ></i>
+                      <span class="visually-hidden">host</span>
+                    </span>`
+                        : ''
+                    }
+
+                  </label>
+                  <input class="form-check-input" id="${user[i].user_name}"
+                  type="checkbox" 
+                  ${user[i]['user_check'] == 'Y' ? 'checked' : ''}
+                  disabled onclick="return false;" />
+                </div>
+              `);
+            }
+
+            $('.card-list').append(`
+                  </div>
+                </div>
+              </div>
+              `);
+          },
         });
       }
       function clickMenu() {
@@ -200,6 +332,8 @@
                         id="when"
                         aria-label="when"
                         aria-describedby="input-haja1"
+                        data-toggle="tooltip"
+                        title="Enter your description here"
                       />
                     </div>
                     <div class="input-group mb-3">
@@ -267,13 +401,42 @@
             >
               Close
             </button>
-            <button type="button" class="btn btn-primary" onclick="saveHaja()">
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="saveBtn"
+              onclick="saveHaja()"
+            >
               Save
             </button>
           </div>
         </div>
       </div>
     </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div
+        id="saveToast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="toast-header">
+          <img src="..." class="rounded me-2" alt="..." />
+          <strong class="me-auto">알림</strong>
+          <!-- <small>11 mins ago</small> -->
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="toast-body">저장 성공하였습니다.</div>
+      </div>
+    </div>
+
     <!-- bootstrap -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
