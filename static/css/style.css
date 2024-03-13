@@ -1,54 +1,32 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-  }
 
-  body {
-    background: #eeeeee;
-    font-family: 'Rubik', sans-serif;
-  }
-  .img {
-    height: 100%;
-    width: 100%;
-  }
-
-  .box{
+  .input-form{
+    width: 500px;
     background: #fff;
     margin: 65px auto;
-    display: -webkit-box;
-    display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-            flex-direction: column;
+
     border-radius: 4px;
     box-shadow: 0 2px 25px rgba(0, 0, 0, 0.2);
   }
 
-  .login-form{
-    width: 500px;
-  }
-  .join-form{
-    width: 500px;
-  }
-  .regi-form{
-    width: 600px;
+  .img{
+    object-fit: contain;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .login-form h1 {
+  .input-form h1 {
     padding: 35px 35px 0 35px;
     font-weight: 300;
     text-align: left;
   }
-  .login-form h3 {
+  .input-form h3 {
     padding: 35px 35px 0 35px;
     font-weight: 300;
 
   }
   .header{
     background-color: #2d6974;
-    height: 80px;
+    height: 180px;
   }
   .title{
     color: #2e3333;
@@ -97,7 +75,7 @@
   .input-field input::placeholder {
     text-transform: uppercase;
   }
-  .login-form .input-field input:focus {
+  .input-form .input-field input:focus {
     border-color: #222;
   }
   a.link {
@@ -131,16 +109,16 @@
     -webkit-transition: all .3s;
     transition: all .3s;
   }
-  .login-form .action button:hover {
+  .action button:hover {
     background: #d8d8d8;
   }
-  .login-form .action button:nth-child(2) {
+  .action button:nth-child(2) {
     background: #2d3b55;
     color: #fff;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 4px;
   }
-  .login-form .action button:nth-child(2):hover {
+  .action button:nth-child(2):hover {
     background: #3c4d6d;
   }
 
