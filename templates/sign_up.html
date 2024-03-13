@@ -1,10 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <title>Join</title>
+
+  <link rel="stylesheet" href="static/css/style.css">
+  <script type="text/javascript" src="static/js/script.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+    <script>
+
+        document.getElementById('password').addEventListener('input', function() {
+          debugger;
+          var confirm_password = document.getElementById('confirm_password').value;
+          var password = this.value;
+
+          var password_error = document.getElementById('password-error');
+          if (password !== confirm_password) {
+            password_error.style.display = 'block';
+          } else {
+            password_error.style.display = 'none';
+          }
+
+          });
+
+        function signUp(){
+          console.log(1);
+          var confirm_password = document.getElementById('confirm_password').value;
+          var password = document.getElementById('password').value;
+          var password_error = document.getElementById('password-error');
+          if (password !== confirm_password) {
+            password_error.style.display = 'block';
+          } else {
+            password_error.style.display = 'none';
+          $.ajax({
+              type: 'POST',
+              url:  '/api/sign_up',
+              data: {
+                  'email': $('#email').val(),
+                  'password': $('#password').val(),
+                  'userName': $('#username').val()
+              },
+              success: function (response) {
+
+              }
+          })
+
+          }
+
+
+        }
+</script>
+
 </head>
+
 <body>
+<!-- partial:index.partial.html -->
+<div class="input-form">
+  <img src="/static/images/HaJa_title.png" alt="">
+  <div class="header">
+      <h1 id="sub-title">같이 해요!</h1>
+  </div>
+  <form>
+    <div class="content">
+        <form action="submit_form.php" method="post">
+          <div class="input-field">
+            <label class="input-label" for="email" style="text-align: left;">이메일</label><br>
+            <input type="email" id="email" name="email" required><br>
+          </div>
+          <div class="input-field">
+            <label class="input-label" for="password">비밀번호</label><br>
+            <input type="password" id="password" name="password" autocomplete="new-password" minlength="4" required><br>
+          </div>
+          <div class="input-field">
+            <label class="input-label" for="confirm_password">비밀번호 확인</label><br>
+            <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" minlength="4" required><br>
+          </div>
+            <span id="password-error" style="color: red; display: none;">Passwords do not match!</span><br>
+          <div class="input-field">
+            <label class="input-label" for="username">이름</label><br>
+            <input type="text" id="username" name="username" required><br><br>
+          </div>
+        </form>
+
+    </div>
+
+    <div class="action">
+      <button class="button" onclick="signUp()">가입하기</button>
+    </div>
+  </form>
+</div>
 
 </body>
+
 </html>
