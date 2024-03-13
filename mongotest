@@ -1,0 +1,25 @@
+board
+{
+ board_id:'1',
+ email: 'test@test.com'
+ when: '3/11',
+ where: '대전역',
+ what: '택시 타기',
+ content: '10시 30분에 대전역에서 카이스트까지 택시 같이 타실분 있나요?',
+ max: 4
+ user:[
+        { user_name: '박영민', user_role: 'host', user_check: 'N'}
+        { user_name: '박지아', user_role: 'guest', user_check: 'N'}
+      ],
+ review:[
+           { user_name: '박영민'}
+           { user_name: '박영민', comment: '덕분에 편하게 왔어요'}
+         ]
+ status: 'end'
+ meet:'off'
+
+}
+
+//user의 개수가 참여 인원 수
+//user의 check가 Y인 개수가 완료된 인원 수
+
