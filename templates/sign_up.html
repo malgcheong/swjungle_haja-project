@@ -1,10 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <title>Join</title>
+
+  <link rel="stylesheet" href="static/css/style.css">
+  <script type="text/javascript" src="static/js/script.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+    <script>
+
+        document.getElementById('password').addEventListener('input', function() {
+          debugger;
+          var confirm_password = document.getElementById('confirm_password').value;
+          var password = this.value;
+
+          var password_error = document.getElementById('password-error');
+          if (password !== confirm_password) {
+            password_error.style.display = 'block';
+          } else {
+            password_error.style.display = 'none';
+          }
+
+          });
+
+        function signUp(){
+          console.log(1);
+          var confirm_password = document.getElementById('confirm_password').value;
+          var password = document.getElementById('password').value;
+          var password_error = document.getElementById('password-error');
+          if (password !== confirm_password) {
+            password_error.style.display = 'block';
+          } else {
+            password_error.style.display = 'none';
+          $.ajax({
+              type: 'POST',
+              url:  '/api/sign_up',
+              data: {
+                  'email': $('#email').val(),
+                  'password': $('#password').val(),
+                  'username': $('#username').val()
+              },
+              success: function (response) {
+                  alert("가입 성공! 환영합니다~")
+                  window.location.href = '/';
+              }
+          })
+
+          }
+
+
+        }
+</script>
 </head>
 <body>
-
 </body>
 </html>
