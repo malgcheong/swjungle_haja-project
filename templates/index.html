@@ -7,23 +7,38 @@
     <link rel="stylesheet" href="static/css/style.css">
     <script type="text/javascript" src="static/js/script.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
     <script>
-      function logIn(){
-        console.log(1);
-        $.ajax({
-            type: 'POST',
-            url:  '/login',
-            data: {
-                'email': $('#email').val(),
-                'password': $('#password').val()
-            },
-            success: function (response) {
-                alert('환영합니다!');
-            }
-        })
-      }
 
-</scrip
+        $(document).ready(function() {
+            $('#loginForm').submit(function(event) {
+                event.preventDefault(); // Prevent the form from submitting normally
+
+            // Get the username and password from the form
+            var email = $('#email').val();
+            var password = $('#password').val();
+
+            // Send the username and password to the server using AJAX
+            $.ajax({
+                url: '/login',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({email: email, password: password}),
+                success: function(response) {
+                // Handle successful login (e.g., redirect to board)
+                    window.location.href = '/api/board/main';
+            },
+            error: function(xhr, status, error) {
+                // Handle login error (e.g., display error message)
+                console.error('Login error:', error);
+                alert('Login failed. Please try again.');
+            }
+        });
+    });
+});
+
+
+</script>
 </head>
 
 <body>
@@ -33,7 +48,7 @@
         <img src="/static/images/HaJa_title.png" alt="">
         <h1 id="sub-title">같이 할래요?</h1>
     </div>
-    <form>
+    <form id="loginForm">
 <!--    <h1>Login</h1>-->
 <!--    input required 나중에 추가-->
         <div class="content">
@@ -46,7 +61,8 @@
         </div>
         <div class="action">
             <button type="button" onclick="location.href='/api/sign_up'">가입하기</button>
-            <button onclick="logIn()">로그인</button>
+            <button type="submit" onclick="logIn()">로그인</button>
+
         </div>
     </form>
 </div>
