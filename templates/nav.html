@@ -66,16 +66,16 @@
       });
 
       function goToMain() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/main';
+        window.location.href = '/api/board/main';
       }
       function goToMy() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/my';
+        window.location.href = '/api/board/my';
       }
       function goToOngo() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/ongo';
+        window.location.href = '/api/board/ongo';
       }
       function goToEnd() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/end';
+        window.location.href = '/api/board/end';
       }
       function findHaja() {}
       function closeHajaModal() {
@@ -108,7 +108,7 @@
         if (isValid) {
           $.ajax({
             type: 'post',
-            url: 'http://127.0.0.1:5001/api/board/regi',
+            url: '/api/board/regi',
             data: {
               user_name: $('#profile').text().slice(0, -1),
               user_role: 'host',
