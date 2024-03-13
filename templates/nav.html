@@ -66,20 +66,45 @@
       });
 
       function goToMain() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/main';
+        window.location.href = '/api/board/main';
       }
       function goToMy() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/my';
+        window.location.href = '/api/board/my';
       }
       function goToOngo() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/ongo';
+        window.location.href = '/api/board/ongo';
       }
       function goToEnd() {
-        window.location.href = 'http://127.0.0.1:5001/api/board/end';
+        window.location.href = '/api/board/end';
       }
-      function findHaja() {}
+
+      function findHaja() {
+
+          debugger;
+          // 키워드 가져오기
+              var search = $('#search-word').val();
+
+              if (search.length > 0) {
+                  $.ajax({
+                      type: 'get',
+                      url: '/api/board/search',
+                      data: {
+                          search: search
+                      },
+                      success: function (res) {
+                          alert(res.message);
+                      },
+                      error: function (xhr, status, error) {
+                          // Handle error if needed
+                          console.error(xhr, status, error);
+                      }
+                  });
+              } else {
+                  alert('검색어를 입력하세요!');
+              }
+      }
       function closeHajaModal() {
-        // 기존에 저장된 Input 내용 지우기
+         $('.input-group input[type="text"]').val('');
       }
       function saveHaja() {
         $('.form-control').each(function () {
@@ -107,7 +132,7 @@
 
         $.ajax({
           type: 'post',
-          url: 'http://127.0.0.1:5001/api/board/regi',
+          url: '/api/board/regi',
           data: {
             user_name: $('#profile').text().slice(0, -1),
             user_role: 'host',
@@ -220,6 +245,17 @@
           $('.menu-toggle').hide();
         }
       }
+
+      function logout(){
+        // Remove JWT from local storage
+        localStorage.removeItem('jwtToken');
+        // Remove JWT from session storage
+        sessionStorage.removeItem('jwtToken');
+        // Remove JWT from cookies
+        document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        alert("로그아웃 되었습니다");
+        window.location.href = '/';
+      }
     </script>
     {% block script %}{% endblock %}
   </head>
@@ -237,6 +273,7 @@
         <div class="container">
           <form class="d-flex justify-content-center">
             <input
+              id="search-word"
               type="text"
               class="me-2 w-50"
               placeholder="모임 제목을 입력해주세요."
