@@ -2,11 +2,9 @@ from bson import ObjectId
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pymongo import MongoClient
 import datetime
-import jwt
-import certifi
 
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import get_jwt, jwt_required,JWTManager,create_access_token
+from flask_jwt_extended import jwt_required, JWTManager, create_access_token
 
 app = Flask(__name__)
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
@@ -14,8 +12,7 @@ app.config['JWT_HEADER_TYPE'] = 'Bearer'
 app.config['JWT_HEADER_NAME'] = 'Authorization'
 app.config['JWT_SECRET_KEY'] = 'your-jwt-secret-key'
 SECRET_KEY = 'your_secret_key123123'
-jwt=JWTManager(app)
-
+jwt = JWTManager(app)
 
 # MongoDB 연결
 ca = certifi.where()
@@ -27,71 +24,6 @@ db = client.db_jungle# 여기에 본인의 MongoDB 데이터베이스 이름을 
 @app.route('/')
 def index_page():
     return render_template('index.html')
-
-
-# 메인 haja 페이지 이동
-@app.route('/api/board/main', methods=['GET'])
-@jwt_required()
-def board_main():
-
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
-
-    # 진행상태는 아직 안정해졌고, 모집상태가 on인것만 반환
-    filtered_results = []
-    for i, item in enumerate(all_results):
-        if item.get('status') == '' and item.get('meet') == 'on':
-            filtered_results.append(item)
-            item['_id'] = str(item['_id'])
-            item['num'] = i+1
-
-    return render_template('main_haja.html', result=filtered_results)
-
-# 내가 만든 haja 페이지 이동
-@app.route('/api/board/my', methods=['GET'])
-# @jwt_required()
-def board_my():
-    user_name=request.form.get('user_name')
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
-
-    # 진행상태는 안정해졌고(''), 모집상태가 on이고, 글쓴 host가 user_name인것만 반환
-    filtered_results = []
-    for item in all_results:
-        for user in item.get('user'):
-            if item.get('status') == '' and item.get('meet') == 'on' and user.get('user_role')=='host' and user.get('user_name')==user_name:
-                filtered_results.append(item)
-    return render_template('my_haja.html', result=filtered_results)
-
-
-# 진행중인 haja 페이지 이동
-@app.route('/api/board/ongo', methods=['GET'])
-@jwt_required()
-def board_ongo():
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
-
-    # 진행상태는  ongo, 모집상태가 off인것만 반환
-    filtered_results = []
-    for item in all_results:
-        if item.get('status') == '' and item.get('meet') == 'on':
-            filtered_results.append(item)
-    return render_template('ongo_haja.html', result=filtered_results)
-
-
-# 완료된 haja 페이지 이동
-@app.route('/api/board/end', methods=['GET'])
-@jwt_required()
-def board_end():
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
-
-    # 진행상태는 end이고, 모집상태가 off인것만 반환
-    filtered_results = []
-    for item in all_results:
-        if item.get('status') == 'end' and item.get('meet') == 'off':
-            filtered_results.append(item)
-    return render_template('end_haja.html', result=filtered_results)
 
 
 # 로그인
@@ -113,7 +45,7 @@ def login():
         # JWT 토큰 생성 및 사용자 정보 포함
         # token = jwt.encode({'user': user['user_name'], 'email': user['email'],
         #                     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, SECRET_KEY)
-        token=create_access_token(identity=user['email'],expires_delta=datetime.timedelta(minutes=30))
+        token = create_access_token(identity=user['email'], expires_delta=datetime.timedelta(minutes=30))
         # 토큰을 응답으로 반환
         return jsonify({'token': token, 'user': user['user_name'], 'email': user['email']}), 200
 
@@ -131,15 +63,91 @@ def sign_up():
         user_name = request.form['username']
         password = generate_password_hash(request.form['password'])
 
-        # 사용자 정보 MongoDB에 저장
-        db.users.insert_one({'user_name': user_name, 'email': user_email, 'password': password})
+        # 이메일 중복 확인 후 사용자 정보 MongoDB에 저장
+        user = db.users.find_one({'email': user_email})
+        if user:
+            return jsonify({'message': 'User already exists', 'user_name': user['user_name']}), 409
+        else:
+            db.users.insert_one({'user_name': user_name, 'email': user_email, 'password': password})
 
         # 회원가입 성공시 메시지 반환
         return jsonify({'message': 'User registered successfully', 'user_name': user_name})
 
-
-
     return render_template('sign_up.html')
+
+
+# 메인 haja 페이지 이동
+@app.route('/api/board/main', methods=['GET'])
+@jwt_required()
+def board_main():
+    # 모든 게시글 가져오기
+    all_results = list(db.board.find({}))
+
+    # 진행상태는 아직 안정해졌고, 모집상태가 on인것만 반환
+    filtered_results = []
+    for item in all_results:
+        if item.get('status') == '' and item.get('meet') == 'on':
+            item['_id'] = str(item['_id'])
+            filtered_results.append(item)
+
+    return render_template('main_haja.html', result=filtered_results)
+
+
+# 내가 만든 haja 페이지 이동
+@app.route('/api/board/my', methods=['GET'])
+@jwt_required()
+def board_my():
+    user_name = request.form.get('user_name')
+    # 모든 게시글 가져오기
+    all_results = list(db.board.find({}))
+
+    # 진행상태는 안정해졌고(''), 모집상태가 on이고, 글쓴 host가 user_name인것만 반환
+    filtered_results = []
+    for item in all_results:
+        for user in item.get('user'):
+            if item.get('status') == '' and item.get('meet') == 'on' and user.get('user_role') == 'host' and user.get(
+                    'user_name') == user_name:
+                item['_id'] = str(item['_id'])
+                filtered_results.append(item)
+    return render_template('my_haja.html', result=filtered_results)
+
+
+# 진행중인 haja 페이지 이동
+@app.route('/api/board/ongo', methods=['GET'])
+@jwt_required()
+def board_ongo():
+    user_name = request.form.get('user_name')
+    # 모든 게시글 가져오기
+    all_results = list(db.board.find({}))
+
+    # 진행상태는  ongo, 모집상태가 off인것만 반환
+    filtered_results = []
+    for item in all_results:
+        for user in item.get('user'):
+            if item.get('status') == '' and item.get('meet') == 'on' and user.get(
+                    'user_name') == user_name:
+                item['_id'] = str(item['_id'])
+                filtered_results.append(item)
+    return render_template('ongo_haja.html', result=filtered_results)
+
+
+# 완료된 haja 페이지 이동
+@app.route('/api/board/end', methods=['GET'])
+@jwt_required()
+def board_end():
+    user_name = request.form.get('user_name')
+    # 모든 게시글 가져오기
+    all_results = list(db.board.find({}))
+
+    # 진행상태는 end이고, 모집상태가 off인것만 반환
+    filtered_results = []
+    for item in all_results:
+        for user in item.get('user'):
+            if item.get('status') == 'end' and item.get('meet') == 'off' and user.get(
+                    'user_name') == user_name:
+                item['_id'] = str(item['_id'])
+                filtered_results.append(item)
+    return render_template('end_haja.html', result=filtered_results)
 
 
 # 게시글 검색
@@ -184,26 +192,25 @@ def board_main_join():
 
     # 사용자 정보 가져오기
     user_name = request.form['user_name']
-    user_role = request.form['user_role']
-    user_check = request.form['user_check']
 
-    user = {'user_name': user_name, 'user_role': user_role, 'user_check': user_check}
+    user = {'user_name': user_name, 'user_role': 'guest', 'user_check': 'N'}
 
     # 기존 보드의 ID
     board_id = request.form.get('board_id')
 
     # 기존 보드를 찾음
-    existing_board = db.board.find_one({'_id': ObjectId(board_id)})
-    if existing_board:
+    board = db.board.find_one({'_id': ObjectId(board_id)})
+    if board:
+        # 최대 참여 가능 인원이 꽉 차 있을 때
+        if board['max'] == len(board['user']):
+            return jsonify({'message': 'Do not more participate. It\'s Full!'}), 500
         # 기존 보드에 유저 추가
-        existing_board['user'].append(user)
-        existing_board['status']='ongo'
-        existing_board['meet']='off'
-
+        board['user'].append(user)
         # 업데이트된 보드를 저장
-        db.board.update_one({'_id': ObjectId(board_id)}, {'$set': existing_board})
+        db.board.update_one({'_id': board_id}, {'$set': board})
 
-        return redirect(url_for('board_main'))
+        # return redirect(url_for('board_main'))
+        return jsonify({'message': 'join success!', 'user': user})
     else:
         return jsonify({'message': 'Board not found.'}), 500
 
@@ -254,15 +261,14 @@ def regi_board():
     else:
         return jsonify({'message': "register board fail!"}), 500
 
-#내가 만든 haja 마감
-@app.route('/api/board/my/close',methods=['POST'])
+
+# 내가 만든 haja 마감
+@app.route('/api/board/my/close', methods=['POST'])
 @jwt_required()
 def close_board():
-    board_id=request.form.get('board_id')
-    db.board.update_one({'_id': ObjectId(board_id)},{'$set': {'meet': 'off','status': 'ongo'}})
+    board_id = request.form.get('board_id')
+    db.board.update_one({'_id': ObjectId(board_id)}, {'$set': {'meet': 'off', 'status': 'ongo'}})
     return redirect(url_for('board_my'))
-
-
 
 
 # 내가 만든 haja 수정
@@ -274,19 +280,22 @@ def update_board():
     where = request.form.get('where')
     what = request.form.get('what')
     content = request.form.get('content')
-    max_num = int(request.form.get('max')) if request.form.get('max') else None
+    max_num = request.form.get('max_num')
 
     # 기존 보드의 ID
-    board_id = request.form.get('board_id')
+    board_id = request.form['board_id']
 
     # 기존 보드 수정
     result = db.board.update_one({'_id': ObjectId(board_id)}, {
-        '$set': {'when': when, 'where': where, 'what': what, 'content': content, 'max_num': max_num}})
+        '$set': {'when': when, 'where': where, 'what': what, 'content': content, 'max': max_num}})
+
+    board = db.board.find_one({'_id': ObjectId(board_id)})
+    board['_id'] = str(board['_id'])
 
     if result.modified_count > 0:
-        return jsonify({'message': "update board successfully!", 'board_id': result.inserted_id}), 200
+        return jsonify({'message': "update board successfully!", 'board': board}), 200
     else:
-        return jsonify({'message': "update board fail!"}), 500
+        return jsonify({'message': "update board fail!", 'board': board}), 500
 
 
 # 내가 만든 haja 삭제
@@ -297,7 +306,7 @@ def delete_board():
     result = db.board.delete_one({'_id': ObjectId(board_id)})
 
     if result.deleted_count:
-        return redirect(url_for('board_my'))
+        return jsonify({'message': 'delete board successfully'}), 200
     else:
         return jsonify({'message': 'can not delete board!'}), 500
 
@@ -317,13 +326,15 @@ def board_check():
     # 해당 board를 조회
     board = db.board.find_one({'_id': ObjectId(board_id)})
 
+    onuser = []
+
     if board:
         # user 배열에서 user_name이 일치하는 요소를 찾음
         for user in board['user']:
             if user['user_name'] == user_name:
                 # user_check 값을 변경
                 user['user_check'] = 'Y'
-
+                onuser = {'user_name': user_name, 'user_check': user['user_check']}
                 break  # 변경된 요소를 찾았으므로 반복문 종료
         # 모든 참가자의 체크 상태 확인
         all_checked = all(user.get('user_check') == 'Y' for user in board['user'])
@@ -334,10 +345,10 @@ def board_check():
         # 변경된 board를 업데이트
         db.board.update_one({'_id': ObjectId(board_id)}, {'$set': board})
 
-        return redirect(url_for('board_ongo'))
+        return jsonify({'message': 'check successfully!', 'user': onuser}), 200
         # return jsonify({'message': 'success'})
     else:
-        return jsonify({'something wrong!'}), 500
+        return jsonify({'message': 'something wrong!'}), 500
 
 
 # 완료된 haja 소감쓰기
@@ -370,10 +381,11 @@ def board_comment():
 
         # board 업데이트
         db.board.update_one({'_id': ObjectId(board_id)}, {'$set': {'review': review}})
-        return redirect(url_for('board_end'))
+        # return redirect(url_for('board_end'))
+        return jsonify({'message': 'wirte review successfully!', 'review': review}), 200
     else:
         return jsonify({'message': 'board not found!'}), 500
 
 
 if __name__ == '__main__':
-   app.run('0.0.0.0',port=5001,debug=True)
+    app.run('0.0.0.0', port=5000, debug=True)
