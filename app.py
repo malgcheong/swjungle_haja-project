@@ -49,7 +49,7 @@ def board_main():
 
 # 내가 만든 haja 페이지 이동
 @app.route('/api/board/my', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def board_my():
     user_name=request.form.get('user_name')
     # 모든 게시글 가져오기
@@ -201,7 +201,7 @@ def board_main_join():
         existing_board['meet']='off'
 
         # 업데이트된 보드를 저장
-        db.board.update_one({'_id': board_id}, {'$set': existing_board})
+        db.board.update_one({'_id': ObjectId(board_id)}, {'$set': existing_board})
 
         return redirect(url_for('board_main'))
     else:
@@ -247,9 +247,10 @@ def regi_board():
         'status': status
     }
     result = db.board.insert_one(data)
-
+    board = db.board.find_one({'_id': result.inserted_id})
+    board['_id'] = str(board['_id'])
     if result.inserted_id:
-        return jsonify({'message': "register board successfully!", 'board_id': str(result.inserted_id)}), 200
+        return jsonify({'message': "register board successfully!", 'board': board}), 200
     else:
         return jsonify({'message': "register board fail!"}), 500
 
