@@ -19,7 +19,7 @@
       integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
       crossorigin="anonymous"
     ></script>
-    
+
     <style>
       .input-form {
         width: 500px;
@@ -114,6 +114,7 @@
       });
 
       function signUp() {
+        event.preventDefault();
         $('input').each(function () {
           var value = $(this).val().trim();
           if (value === '') {
@@ -123,12 +124,37 @@
           }
         });
 
+        var isValid = true;
         $('input').each(function () {
           if ($(this).hasClass('is-invalid')) {
+            isValid = false;
             $(this).focus(); // 해당 입력필드로 포커싱
             return false;
           }
         });
+
+        if (isValid) {
+          $.ajax({
+            type: 'POST',
+            url: '/api/sign_up',
+            data: {
+              email: $('#email').val(),
+              password: $('#password').val(),
+              username: $('#username').val(),
+            },
+            success: function (response) {
+              alert('가입 성공! 환영합니다.');
+              window.location.href = '/';
+            },
+            error: function (xhr, status, error) {
+              if (xhr.status === 409) {
+                // Handle 409 Conflict error
+                var errorMessage = JSON.parse(xhr.responseText).message;
+                alert('유저가 이미 사용중입니다.');
+              }
+            },
+          });
+        }
       }
     </script>
   </head>
@@ -143,13 +169,19 @@
         />
       </div>
 
-      <form id="loginForm"  method="post">
+      <div id="loginForm">
         <div class="content">
           <div class="input-field">
             <label class="input-label" for="email" style="text-align: left"
               >이메일</label
             >
-            <input class="is-valid" type="email" id="email" name="email" required/>
+            <input
+              class="is-valid"
+              type="email"
+              id="email"
+              name="email"
+              required
+            />
           </div>
           <br />
           <div class="input-field">
@@ -196,7 +228,7 @@
         <div class="action">
           <button class="button" onclick="signUp()">가입하기</button>
         </div>
-      </form>
+      </div>
     </div>
 
     <!-- bootstrap -->
