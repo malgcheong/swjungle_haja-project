@@ -12,50 +12,80 @@
 </style>
 {% endblock %} {% block script %}
 <script>
+  function togleUpdateHajaModal(me) {
+    event.preventDefault();
+    title = $(me).closest('.card-wrap').find('.my_haja_title').text();
+    how = $(me).closest('.card-wrap').find('.my_haja_how').text().trim();
+    debugger;
+    given_string = title.trim();
+    parts = given_string.split('에');
+    when = parts[0].trim();
+    where = parts[1].trim();
+    what = parts[2].split('하자!')[0].substring(2).trim();
+    const boardId = $(me).closest('.card-wrap').attr('class').split(/\s+/)[5];
+
+    $('#boardId').val(boardId);
+    $('#when').val(when);
+    $('#where').val(where);
+    $('#what').val(what);
+    $('#how').val(how);
+    $('#updateHajaModal').modal('toggle');
+  }
   function updateHaja(me) {
-    boardId = $(me).closest('.card-wrap').attr('class').split(/\s+/)[5];
+    debugger;
+    const when = $('#when').val();
+    const where = $('#where').val();
+    const what = $('#what').val();
+    const how = $('#how').val();
+    const max_num = $('#howMany').val();
+    const boardId = $('#boardId').val();
+
     $.ajax({
-          type: 'post',
-          url: '/api/board/my/update',
-          data: {
-            when: when,
-            where: where,
-            what: what,
-            content: how,
-            max: $('#howMany').val(),
-            board_id: boardId
-          },
-          success: function (res) {
-            alert(response["message"])
-          },
-        });
+      type: 'post',
+      url: '/api/board/my/update',
+      data: {
+        when: when,
+        where: where,
+        what: what,
+        content: how,
+        max_num: max_num,
+        board_id: boardId,
+      },
+      success: function (res) {
+        debugger;
+        location.reload();
+        alert(res['message']);
+      },
+    });
   }
   function closeHaja(me) {
     boardId = $(me).closest('.card-wrap').attr('class').split(/\s+/)[5];
     $.ajax({
-          type: 'post',
-          url: '/api/board/my/close',
-          data: {
-            user_name: $('#profile').text().slice(0, -1),
-            board_id: boardId
-          },
-          success: function (res) {
-            alert("진행 HaJa!")
-          },
-        });
+      type: 'post',
+      url: '/api/board/my/close',
+      data: {
+        user_name: $('#profile').text().slice(0, -1),
+        board_id: boardId,
+      },
+      success: function (res) {
+        location.reload();
+        alert('진행 HaJa!');
+      },
+    });
   }
-    function deleteHaja(me) {
+  function deleteHaja(me) {
     boardId = $(me).closest('.card-wrap').attr('class').split(/\s+/)[5];
     $.ajax({
-          type: 'post',
-          url: '/api/board/my/delete',
-          data: {
-            board_id: boardId
-          },
-          success: function (res) {
-            alert("삭제 완료! 다음 기회에...")
-          },
-        });
+      type: 'post',
+      url: '/api/board/my/delete',
+      data: {
+        board_id: boardId,
+      },
+      success: function (res) {
+        location.reload();
+        alert('삭제 완료! 다음 기회에...');
+      },
+    });
   }
   function clickHowToggle(me) {
     if ($(me.parentElement).find('.fa-chevron-down').css('display') == 'none') {
@@ -74,10 +104,10 @@
   {% for item in result %}
   <div
     class="card-wrap border border-0 rounded-4 p-4 {{ item._id }}"
-    style="background-color: #f6f6e9"
+    style="background-color: #172037; color: white;"
   >
     <div class="row">
-      <p class="col-8 border border-2 border-dark rounded-2">
+      <p class="my_haja_title col-8 border border-2 border-wihte rounded-2">
         {{ item.when }}에 {{ item.where }}에서 {{ item.what }}하자!
       </p>
       <div class="col-4">
@@ -94,7 +124,9 @@
         <button
           class="btn btn-sm btn-info lh-1"
           style="height: 25px"
-          onclick="updateHaja(this)"
+          data-bs-toggle="modal"
+          data-bs-target="#updateHajaModal"
+          onclick="togleUpdateHajaModal(this)"
         >
           수정
         </button>
@@ -110,9 +142,9 @@
           style="height: 25px"
           type="button"
           data-bs-toggle="collapse"
-          data-bs-target="#content{{item.num}}"
+          data-bs-target="#content{{ item._id }}"
           aria-expanded="false"
-          aria-controls="#content{{item.num}}"
+          aria-controls="#content{{ item._id }}"
           onclick="clickHowToggle(this)"
         >
           <i class="fa-solid fa-chevron-down"></i>
@@ -120,8 +152,8 @@
         </button>
       </div>
     </div>
-    <div class="row collapse content" id="content{{item.num}}">
-      <div class="col-8 border border-2 border-dark rounded-2">
+    <div class="row collapse content" id="content{{ item._id }}">
+      <div class="my_haja_how col-8 border border-2 border-white rounded-2">
         {{ item.content }}
       </div>
       <div class="col-4">
@@ -132,9 +164,7 @@
             for="{{ user.user_name }}"
           >
             {{ user.user_name }} {% if user.user_role == 'host' %}
-            <span
-              class="top-0 start-100 translate-middle badge"
-            >
+            <span class="top-0 start-100 translate-middle badge">
               <i
                 class="fa-solid fa-crown fa-rotate-by fa-sm"
                 style="color: #ffd43b; --fa-rotate-angle: 30deg"
@@ -143,9 +173,6 @@
             </span>
             {% endif %}
           </label>
-          <input class="form-check-input" id="{{ user.user_name }}"
-          type="checkbox" {% if user.user_check == 'Y' %} checked {% endif %}
-          disabled onclick="return false;" />
         </div>
         {% endfor %}
       </div>
@@ -153,4 +180,127 @@
   </div>
   {% endfor %}
 </div>
+
+<div
+  class="modal fade"
+  id="updateHajaModal"
+  data-bs-backdrop="static"
+  data-bs-keyboard="false"
+  tabindex="-1"
+  aria-labelledby="updateHajaModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="updateHajaModalLabel">
+          HaJa 생성하기
+        </h1>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          onclick="closeHajaModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="box regi-form">
+          <div>
+            <div class="content">
+              <div class="container d-flex flex-column align-items-center">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="boardId"
+                  aria-label="boardId"
+                  aria-describedby="input-haja1"
+                  data-toggle="tooltip"
+                  title="Enter your description here"
+                  hidden
+                />
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="input-haja1"
+                    >언제&nbsp;&nbsp;&nbsp;</span
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="when"
+                    aria-label="when"
+                    aria-describedby="input-haja1"
+                    data-toggle="tooltip"
+                    title="Enter your description here"
+                  />
+                </div>
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="input-haja2">어디서</span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="where"
+                    aria-label="where"
+                    aria-describedby="input-haja2"
+                  />
+                </div>
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="input-haja3">무엇을</span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="what"
+                    aria-label="what"
+                    aria-describedby="input-haja3"
+                  />
+                </div>
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="input-haja4">어떻게</span>
+                  <textarea
+                    class="form-control"
+                    id="how"
+                    aria-label="how"
+                    aria-describedby="input-haja4"
+                    maxlength="100"
+                  ></textarea>
+                </div>
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="input-haja5">몇명이</span>
+                  <select
+                    class="form-select"
+                    id="howMany"
+                    aria-label="howMany"
+                    aria-describedby="input-haja5"
+                  >
+                    <option selected value="2">2명</option>
+                    <option value="3">3명</option>
+                    <option value="4">4명</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          onclick="closeHajaModal()"
+        >
+          Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="saveBtn"
+          onclick="updateHaja(this)"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

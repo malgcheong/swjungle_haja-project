@@ -46,11 +46,18 @@
       .is-invalid {
         border: solid red;
       }
+      .navigation{
+        background-color: #152039;
+        border: 0;
+      }
     </style>
     {% block style %}{% endblock %}
 
     <script>
       $(document).ready(function () {
+        userName = sessionStorage.getItem('user');
+        $('#profile').text(userName);
+
         // 입력 필드에서 포커스가 벗어날 때 이벤트 처리
         $('.form-control').each(function () {
           $(this).blur(function () {
@@ -63,12 +70,26 @@
             }
           });
         });
+
+        $('.navigation').hover(
+          function () {
+            debugger;
+            // 마우스가 올라갔을 때 CSS 속성 변경
+            $(this).find('.menu-toggle').show();
+
+          },
+          function () {
+            // 마우스가 벗어났을 때 초기 CSS 속성으로 복원
+            $(this).find('.menu-toggle').hide();
+          }
+        );
       });
 
-      function goToMain() {
+      function goToMain(me) {
         window.location.href = '/api/board/main';
       }
-      function goToMy() {
+      function goToMy(me) {
+        debugger;
         window.location.href = '/api/board/my';
       }
       function goToOngo() {
@@ -77,9 +98,109 @@
       function goToEnd() {
         window.location.href = '/api/board/end';
       }
-      function findHaja() {}
+      function findHaja() {
+        const searh = $('.search').val();
+        $.ajax({
+          type: 'get',
+          url: `/api/board/search?search=${searh}`,
+          success: function (res) {
+            debugger;
+            $('.card-list').empty();
+            for (let i = 0; i < res.length; i++) {
+              const board = res[i];
+              const user = res[i]['user'];
+              $('.card-list').append(`
+                  <div
+                      class="card-wrap border border-0 rounded-4 p-4 ${
+                        board['_id']
+                      }"
+                      style="background-color: #172037; color: white;"
+                    >
+                      <div class="row">
+                        <p class="col-8 border border-2 border-white rounded-2">
+                          ${board['when']}에 ${board['where']}에서 ${
+                board['what']
+              }하자!
+                        </p>
+                        <div class="col-4">
+                          <p class="badge bg-primary lh-1">
+                            ${user.length} / ${board['max']}
+                          </p>
+                          <button
+                            class="btn btn-sm btn-primary lh-1"
+                            style="height: 25px"
+                            onclick="enterHaja(this)"
+                          >
+                            참가
+                          </button>
+                          <button
+                            class="btn btn-sm btn-primary lh-1"
+                            style="height: 25px"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#content${board['_id']}"
+                            aria-expanded="false"
+                            aria-controls="#content${board['_id']}"
+                            onclick="clickHowToggle(this)"
+                          >
+                            <i class="fa-solid fa-chevron-down"></i>
+                            <i class="fa-solid fa-chevron-up display-none"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row collapse content" id="content${
+                        board['_id']
+                      }">
+                        <div class="col-8 border border-2 border-white rounded-2">
+                          ${board['content']}
+                        </div>
+                        <div class="col-4">
+                          <div class="d-form-check">
+                            <label
+                              class="position-relative form-check-label"
+                              for="${user[0].user_name}"
+                            >
+                              ${user[0].user_name}
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge"
+                              >
+                                <i
+                                  class="fa-solid fa-crown fa-rotate-by fa-sm"
+                                  style="color: #ffd43b; --fa-rotate-angle: 30deg"
+                                ></i>
+                                <span class="visually-hidden">host</span>
+                              </span>
+                            </label>
+                            <input class="form-check-input" id="${
+                              user[0].user_name
+                            }"
+                            type="checkbox"
+                            ${user[0]['user_check'] == 'Y' ? 'checked' : ''}
+                            disabled onclick="return false;" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  `);
+            }
+            alert('검색 완료');
+          },
+          error: function (res) {
+            debugger;
+            $('.card-list').empty();
+            var message = JSON.parse(res.responseText).error;
+            alert(message);
+          },
+        });
+      }
       function closeHajaModal() {
         // 기존에 저장된 Input 내용 지우기
+      }
+      function logout() {
+        sessionStorage.clear();
+        document.cookie =
+          'token' + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        window.location.href = '/';
       }
       function saveHaja() {
         $('.form-control').each(function () {
@@ -133,10 +254,10 @@
                   class="card-wrap border border-0 rounded-4 p-4 ${
                     board['_id']
                   }"
-                  style="background-color: #f6f6e9"
+                  style="background-color: #172037; color: white;"
                 >
                   <div class="row">
-                    <p class="col-8 border border-2 border-dark rounded-2">
+                    <p class="col-8 border border-2 border-white rounded-2">
                       ${board['when']}에 ${board['where']}에서 ${
                 board['what']
               }하자!
@@ -168,7 +289,7 @@
                     </div>
                   </div>
                   <div class="row collapse content" id="content${board['_id']}">
-                    <div class="col-8 border border-2 border-dark rounded-2">
+                    <div class="col-8 border border-2 border-white rounded-2">
                       ${board['content']}
                     </div>
                     <div class="col-4">
@@ -177,7 +298,7 @@
                           class="position-relative form-check-label"
                           for="${user[0].user_name}"
                         >
-                          ${user[0].user_name} 
+                          ${user[0].user_name}
                         <span
                             class="position-absolute top-0 start-100 translate-middle badge"
                           >
@@ -191,7 +312,7 @@
                         <input class="form-check-input" id="${
                           user[0].user_name
                         }"
-                        type="checkbox" 
+                        type="checkbox"
                         ${user[0]['user_check'] == 'Y' ? 'checked' : ''}
                         disabled onclick="return false;" />
                       </div>
@@ -233,7 +354,7 @@
           <div class="d-flex justify-content-center">
             <input
               type="text"
-              class="me-2 w-50"
+              class="search me-2 w-50"
               placeholder="모임 제목을 입력해주세요."
             />
             <button class="btn btn-primary me-2" onclick="findHaja()">
@@ -249,7 +370,7 @@
             </button>
           </div>
         </div>
-        <div id="profile">남청우님</div>
+        <div id="profile"></div>
       </div>
     </nav>
 
@@ -257,27 +378,46 @@
     <div class="d-flex">
       <!-- 메뉴 토글 -->
       <div
-        class="d-flex flex-column align-items-start p-2"
-        style="height: 100vh"
+        style="width: 10%; height: 100vh"
       >
-        <button class="w-100 btn btn-primary my-2" onclick="logout()">
+        <button
+          class="navigation w-100 btn btn-primary my-2"
+          onclick="logout()"
+        >
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <br/>
           <span class="menu-toggle display-none">로그아웃</span>
         </button>
-        <button class="w-100 btn btn-primary my-2" onclick="goToMain()">
+        <button
+          class="navigation w-100 btn btn-primary my-2"
+          onclick="goToMain()"
+        >
           <i class="fa-solid fa-house"></i>
+          <br/>
           <span class="menu-toggle display-none">모집중인 HaJa</span>
         </button>
-        <button class="w-100 btn btn-primary my-2" onclick="goToMy()">
+        <button
+          class="navigation w-100 btn btn-primary my-2"
+          onclick="goToMy(this)"
+        >
           <i class="fa-solid fa-screwdriver"></i>
+          <br/>
           <span class="menu-toggle display-none">내가 만든 HaJa</span>
         </button>
-        <button class="w-100 btn btn-primary my-2" onclick="goToOngo()">
+        <button
+          class="navigation w-100 btn btn-primary my-2"
+          onclick="goToOngo()"
+        >
           <i class="fa-solid fa-spinner"></i>
+          <br/>
           <span class="menu-toggle display-none">진행중인 HaJa</span>
         </button>
-        <button class="w-100 btn btn-primary my-2" onclick="goToEnd()">
+        <button
+          class="navigation w-100 btn btn-primary my-2"
+          onclick="goToEnd()"
+        >
           <i class="fa-solid fa-circle-check"></i>
+          <br/>
           <span class="menu-toggle display-none">완료된 HaJa</span>
         </button>
       </div>
@@ -310,10 +450,6 @@
           </div>
           <div class="modal-body">
             <div class="box regi-form">
-              <img
-                src="/Users/ja/Desktop/Jungle/Week0/Haja/HaJa_logo_short.png"
-                alt=""
-              />
               <div>
                 <div class="content">
                   <div class="container d-flex flex-column align-items-center">
@@ -418,7 +554,6 @@
         aria-atomic="true"
       >
         <div class="toast-header">
-          <img src="..." class="rounded me-2" alt="..." />
           <strong class="me-auto">알림</strong>
           <!-- <small>11 mins ago</small> -->
           <button

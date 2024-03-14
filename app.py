@@ -27,9 +27,6 @@ def login():
     user_email = request.json.get('email')
     password = request.json.get('password')
 
-    #
-    # user_email = auth['email']
-    # password = auth['password']
 
     # MongoDB에서 사용자 정보 조회
     user = db.users.find_one({'email': user_email})
@@ -37,12 +34,11 @@ def login():
     if user and check_password_hash(user['password'], password):  # 비밀번호 해싱 체크
 
         payload = {
-         'user': user['user_name'],
-         'email': user['email'],
-         'exp': datetime.datetime.utcnow() +  datetime.timedelta(minutes=30)}
-        # 토큰을 발급한다.
+            'user_name': user['user_name'],
+            'email': user['email'],
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}
         token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-        # 토큰을 응답으로 반환
+
         return jsonify({'token': token, 'user': user['user_name'], 'email': user['email']}), 200
 
     # 인증 실패시 에러 반환
@@ -75,30 +71,26 @@ def sign_up():
 # 메인 haja 페이지 이동
 @app.route('/api/board/main', methods=['GET'])
 def board_main():
-# Extract JWT token from the request cookie
+    # Extract JWT token from the request cookie
     jwt_token = request.cookies.get('token')
+
     if not jwt_token:
         # If JWT token is not present in the cookie, return an error response
         return jsonify({'error': 'JWT token is missing'}), 401
 
     try:
-        # Validate the JWT token
-        # For simplicity, let's assume a secret key is used for signing the token
-        # Replace 'your_secret_key' with your actual secret key
-        decoded_token = jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+        jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
 
-        # Extract user information from the decoded token
-        user_email = decoded_token.get('email')
-        user_id = decoded_token.get('user_id')
-
-        # Continue with the route logic
+        # 모든 게시글 가져오기
         all_results = list(db.board.find({}))
+
+        # 진행상태는 아직 안정해졌고, 모집상태가 on인것만 반환
         filtered_results = []
         for item in all_results:
             if item.get('status') == '' and item.get('meet') == 'on':
                 item['_id'] = str(item['_id'])
                 filtered_results.append(item)
-
+        filtered_results.reverse()
         return render_template('main_haja.html', result=filtered_results)
 
     except jwt.ExpiredSignatureError:
@@ -117,59 +109,127 @@ def board_main():
 # 내가 만든 haja 페이지 이동
 @app.route('/api/board/my', methods=['GET'])
 def board_my():
-    user_name = request.form.get('user_name')
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
+    # Extract JWT token from the request cookie
+    jwt_token = request.cookies.get('token')
 
-    # 진행상태는 안정해졌고(''), 모집상태가 on이고, 글쓴 host가 user_name인것만 반환
-    filtered_results = []
-    for item in all_results:
-        for user in item.get('user'):
-            if item.get('status') == '' and item.get('meet') == 'on' and user.get('user_role') == 'host' and user.get(
-                    'user_name') == user_name:
-                item['_id'] = str(item['_id'])
-                filtered_results.append(item)
-    return render_template('my_haja.html', result=filtered_results)
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+
+    try:
+        token=jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+        user_name = token.get('user_name')
+        # 모든 게시글 가져오기
+        all_results = list(db.board.find({}))
+
+        # 진행상태는 안정해졌고(''), 모집상태가 on이고, 글쓴 host가 user_name인것만 반환
+        filtered_results = []
+        for item in all_results:
+            for user in item.get('user'):
+                if item.get('status') == '' and item.get('meet') == 'on' and user.get('user_role') == 'host' and user.get(
+                        'user_name') == user_name:
+                    item['_id'] = str(item['_id'])
+                    filtered_results.append(item)
+        filtered_results.reverse()
+        return render_template('my_haja.html', result=filtered_results)
+    except jwt.ExpiredSignatureError:
+        # Handle expired token
+        return jsonify({'error': 'JWT token has expired'}), 401
+
+    except jwt.InvalidTokenError:
+        # Handle invalid token (e.g., tampered token)
+        return jsonify({'error': 'Invalid JWT token'}), 401
+
+    except Exception as e:
+        # Handle other exceptions
+        return jsonify({'error': str(e)}), 401
 
 
 # 진행중인 haja 페이지 이동
 @app.route('/api/board/ongo', methods=['GET'])
-def board_ongo():
-    user_name = request.form.get('user_name')
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
 
-    # 진행상태는  ongo, 모집상태가 off인것만 반환
-    filtered_results = []
-    for item in all_results:
-        for user in item.get('user'):
-            if item.get('status') == '' and item.get('meet') == 'on' and user.get(
-                    'user_name') == user_name:
-                item['_id'] = str(item['_id'])
-                filtered_results.append(item)
-    return render_template('ongo_haja.html', result=filtered_results)
+def board_ongo():
+    # Extract JWT token from the request cookie
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+
+    try:
+        token=jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+        user_name = token.get('user_name')
+    # 모든 게시글 가져오기
+        all_results = list(db.board.find({}))
+
+        # 진행상태는  ongo, 모집상태가 off인것만 반환
+        filtered_results = []
+        for item in all_results:
+            for user in item.get('user'):
+                if item.get('status') == 'ongo' and item.get('meet') == 'off' and user.get(
+                        'user_name') == user_name:
+                    item['_id'] = str(item['_id'])
+                    filtered_results.append(item)
+        filtered_results.reverse()
+        return render_template('ongo_haja.html', result=filtered_results)
+
+    except jwt.ExpiredSignatureError:
+        # Handle expired token
+        return jsonify({'error': 'JWT token has expired'}), 401
+
+    except jwt.InvalidTokenError:
+        # Handle invalid token (e.g., tampered token)
+        return jsonify({'error': 'Invalid JWT token'}), 401
+
+    except Exception as e:
+        # Handle other exceptions
+        return jsonify({'error': str(e)}), 401
 
 
 # 완료된 haja 페이지 이동
 @app.route('/api/board/end', methods=['GET'])
-def board_end():
-    user_name = request.form.get('user_name')
-    # 모든 게시글 가져오기
-    all_results = list(db.board.find({}))
 
-    # 진행상태는 end이고, 모집상태가 off인것만 반환
-    filtered_results = []
-    for item in all_results:
-        for user in item.get('user'):
-            if item.get('status') == 'end' and item.get('meet') == 'off' and user.get(
-                    'user_name') == user_name:
-                item['_id'] = str(item['_id'])
-                filtered_results.append(item)
-    return render_template('end_haja.html', result=filtered_results)
+def board_end():
+    # Extract JWT token from the request cookie
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+
+    try:
+        token=jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+        user_name = token.get('user_name')
+    # 모든 게시글 가져오기
+        all_results = list(db.board.find({}))
+
+        # 진행상태는 end이고, 모집상태가 off인것만 반환
+        filtered_results = []
+        for item in all_results:
+            for user in item.get('user'):
+                if item.get('status') == 'end' and item.get('meet') == 'off' and user.get(
+                        'user_name') == user_name:
+                    item['_id'] = str(item['_id'])
+                    filtered_results.append(item)
+        filtered_results.reverse()
+        return render_template('end_haja.html', result=filtered_results)
+
+    except jwt.ExpiredSignatureError:
+        # Handle expired token
+        return jsonify({'error': 'JWT token has expired'}), 401
+
+    except jwt.InvalidTokenError:
+        # Handle invalid token (e.g., tampered token)
+        return jsonify({'error': 'Invalid JWT token'}), 401
+
+    except Exception as e:
+        # Handle other exceptions
+        return jsonify({'error': str(e)}), 401
 
 
 # 게시글 검색
 @app.route('/api/board/search', methods=['GET'])
+
 def search_board():
     # 시간, 장소, 내용에 해당 텍스트가 포함되는 모든 문서 검색
     search = request.args.get('search')
@@ -203,11 +263,16 @@ def search_board():
 
 # 메인 haja 페이지에서 참가 버튼 클릭시
 @app.route('/api/board/main/join', methods=['POST'])
+
 def board_main_join():
     # 참가 버튼 클릭시 update 참여 인원+1, 참가자 추가
+    jwt_token = request.cookies.get('token')
 
-    # 사용자 정보 가져오기
-    user_name = request.form['user_name']
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+    token = jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+    user_name = token.get('user_name')
 
     user = {'user_name': user_name, 'user_role': 'guest', 'user_check': 'N'}
 
@@ -220,10 +285,16 @@ def board_main_join():
         # 최대 참여 가능 인원이 꽉 차 있을 때
         if board['max'] == len(board['user']):
             return jsonify({'message': 'Do not more participate. It\'s Full!'}), 500
+
+        # 똑같은 인원이 또 참여를 눌렀을 경우
+        for user_item in board.get('user', []):
+            if user_item.get('user_name') == user_name:
+                return jsonify({'message': 'The same ID should not participate.'}), 500
+        
         # 기존 보드에 유저 추가
         board['user'].append(user)
         # 업데이트된 보드를 저장
-        db.board.update_one({'_id': board_id}, {'$set': board})
+        db.board.update_one({'_id': ObjectId(board_id)}, {'$set': board})
 
         # return redirect(url_for('board_main'))
         return jsonify({'message': 'join success!', 'user': user})
@@ -234,11 +305,20 @@ def board_main_join():
 # haja 등록
 @app.route('/api/board/regi', methods=['POST'])
 def regi_board():
-    # 사용자 정보 가져오기
 
-    user_name = request.form['user_name']
-    user_role = request.form['user_role']
-    user_check = request.form['user_check']
+    # 사용자 정보 가져오기
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+
+    token = jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+
+    user_name = token.get('user_name')
+
+    user_role = 'host'
+    user_check = 'N'
 
     # 클라이언트로부터 폼 데이터 추출
     when = request.form.get('when')
@@ -271,6 +351,7 @@ def regi_board():
     result = db.board.insert_one(data)
     board = db.board.find_one({'_id': result.inserted_id})
     board['_id'] = str(board['_id'])
+
     if result.inserted_id:
         return jsonify({'message': "register board successfully!", 'board': board}), 200
     else:
@@ -279,7 +360,13 @@ def regi_board():
 
 # 내가 만든 haja 마감
 @app.route('/api/board/my/close', methods=['POST'])
+
 def close_board():
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
     board_id = request.form.get('board_id')
     db.board.update_one({'_id': ObjectId(board_id)}, {'$set': {'meet': 'off', 'status': 'ongo'}})
     return redirect(url_for('board_my'))
@@ -287,7 +374,13 @@ def close_board():
 
 # 내가 만든 haja 수정
 @app.route('/api/board/my/update', methods=['POST'])
+
 def update_board():
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
     # 클라이언트로부터 폼 데이터 추출
     when = request.form.get('when')
     where = request.form.get('where')
@@ -313,8 +406,16 @@ def update_board():
 
 # 내가 만든 haja 삭제
 @app.route('/api/board/my/delete', methods=['POST'])
+
 def delete_board():
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+
     board_id = request.form.get('board_id')
+
     result = db.board.delete_one({'_id': ObjectId(board_id)})
 
     if result.deleted_count:
@@ -325,14 +426,22 @@ def delete_board():
 
 # 진행중인 haja 완료
 @app.route('/api/board/ongo/check', methods=['POST'])
+
 def board_check():
     # 완료 버튼 클릭시 update 참가자 체크 & 모든 참가자가 체크 상태일 시 => 게시글의 상태를 완료 상태로 변경
 
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+
+    token = jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+
+    #완료하고자 하는 user
+    user_name = token.get('user_name')
     # 기존 보드의 ID
     board_id = request.form.get('board_id')
-
-    # 완료 하고자 하는 user
-    user_name = request.form.get('user_name')
 
     # 해당 board를 조회
     board = db.board.find_one({'_id': ObjectId(board_id)})
@@ -364,14 +473,22 @@ def board_check():
 
 # 완료된 haja 소감쓰기
 @app.route('/api/board/end/comment', methods=['POST'])
+
 def board_comment():
     # 소감 쓰기 버튼 클릭 시 update comment 칼럼에 댓글 추가 및 사용자 이름 추가
+    jwt_token = request.cookies.get('token')
+
+    if not jwt_token:
+        # If JWT token is not present in the cookie, return an error response
+        return jsonify({'error': 'JWT token is missing'}), 401
+    # 완료 버튼 클릭시 update 참가자 체크 & 모든 참가자가 체크 상태일 시 => 게시글의 상태를 완료 상태로 변경
+    token = jwt.decode(jwt_token, SECRET_KEY, algorithms=['HS256'])
+    # 입력하고자 하는 user
+    user_name = token.get('user_name')
 
     # 기존 보드의 ID
     board_id = request.form.get('board_id')
 
-    # 완료 하고자 하는 user
-    user_name = request.form.get('user_name')
 
     # 입력한 댓글
     comment = request.form.get('comment')
